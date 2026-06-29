@@ -1,0 +1,19 @@
+[package]
+name = "chplus"
+version = "0.1.0"
+edition = "2021"
+description = "CH+ 中文编程语言工具链 (cargo 风格 CLI)"
+license = "AGPL-3.0"
+
+[[bin]]
+name = "chplus"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+
+# 编译期把底层 C++ 解释器路径注入,运行时能直接找到
+[build-dependencies]
+# 不依赖 tauri-build,这是独立 CLI
