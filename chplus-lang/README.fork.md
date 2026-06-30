@@ -4,7 +4,7 @@
 
 ## 为什么放在这里
 
-官方仓库的 `main` 分支已不再包含解释器源码(只剩 `chplus_ide.py` 一个壳),源码仅保留在历史 tag 中。为保障本项目（CH+ IDE）的可编译性、可审计性与长期可控,将 v3.0.0 的源码直接纳入本仓库作为一等公民。
+官方仓库的 `main` 分支已不再包含解释器源码(只剩 `chplus_ide.py` 一个壳),源码仅保留在历史 tag 中。为保障 `chplus-toolchain` 的可编译性、可审计性与长期可控,将 v3.0.0 的源码直接纳入本仓库作为一等公民,由 `cli/build.rs` 在编译期调用 `g++`/`clang++` 自动构建,产物作为底层 `chplus_core` 二进制被 CLI wrapper 通过子进程调用。
 
 > 原 `README.md` 是官方 v3.0.0 的文档,保留未动;本文件仅说明 fork 状态。
 
@@ -37,14 +37,14 @@ chplus-lang/
 
 ## 编译
 
-本项目已通过 `src-tauri/build.rs` 自动编译此 C++ 源码,无需手动操作。`cargo build` / `npm run tauri dev` 会自动调用系统 `g++`/`clang++` 编译,产物输出到 `OUT_DIR/bin/chplus`,运行时由 `runner.rs` 自动查找调用。
+本项目已通过 `cli/build.rs` 自动编译此 C++ 源码,无需手动操作。`cargo build` 会自动调用系统 `g++`/`clang++` 编译,产物输出到 `OUT_DIR/bin/chplus_core`,运行时由 CLI 的 `crate::core_path()` 读取注入的 `CHPLUS_CORE_PATH` 环境变量定位调用。
 
 如需独立编译(调试语言本身时):
 
 ```bash
 cd chplus-lang
-g++ -std=c++17 -O2 -I include main.cpp src/lexer.cpp src/parser.cpp src/interpreter.cpp src/asm.cpp src/CodeFormatter.cpp src/CHFormatter.cpp -o chplus
-./chplus examples/hello.ch
+g++ -std=c++17 -O2 -I include main.cpp src/lexer.cpp src/parser.cpp src/interpreter.cpp src/asm.cpp src/CodeFormatter.cpp src/CHFormatter.cpp -o chplus_core
+./chplus_core examples/hello.ch
 ```
 
 ## 与上游的差异

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "CH+ 中文编程语言工具链 (cargo 风格 CLI)"
 license = "AGPL-3.0"
+license-file = "../LICENSE"   # 完整协议含 Commons Clause 1.0,SPDX 无法表达
 
 [[bin]]
 name = "chplus"
