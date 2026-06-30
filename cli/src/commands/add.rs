@@ -30,18 +30,23 @@ pub fn add(args: &[String]) -> Result<()> {
     let rev_val = take_value(args, &["--rev"]);
 
     // 构造依赖定义
+    // --path 与 git url 互斥
+    // 注意:--path 的值会被 positional 收集(不以 - 开头),需排除
+    if path_val.is_some() {
+        let has_git_url = positional.len() > 1
+            && positional.get(1).map(|s| s.as_str()) != path_val.as_deref();
+        if has_git_url {
+            return Err(anyhow!("--path 与 git url 不能同时指定"));
+        }
+    }
     let dep = if let Some(p) = path_val {
         Dependency::Path { path: p }
     } else {
-        // git 形式:url 优先取第二个位置参数,--path 与 git 互斥
+        // git 形式:url 优先取第二个位置参数
         let git = positional
             .get(1)
             .map(|s| s.to_string())
             .ok_or_else(|| anyhow!("缺少 git url (用法: chplus add <库名> <git url> [--tag/--branch/--rev] 或 --path <本地路径>)"))?;
-        // --path 与 git url 不能同时出现
-        if positional.len() > 1 && path_val.is_some() {
-            return Err(anyhow!("--path 与 git url 不能同时指定"));
-        }
         // ref 三选一,都为空则拉默认分支 HEAD
         let ref_count = [tag_val.is_some(), branch_val.is_some(), rev_val.is_some()]
             .iter()
