@@ -10,6 +10,19 @@ name = "{name}"
 version = "0.1.0"
 entry = "主函数.ch"
 
+# 构建档位:目前 dev/release 行为一致,框架先立起来,后续挂底层 flag
+[profile.dev]
+opt_level = 0
+debug = true
+
+[profile.release]
+opt_level = 2
+debug = false
+
+# 依赖三种形式:
+#   库名 = { git = "url", tag = "v0.1.0" }
+#   库名 = { git = "url", branch = "main" }
+#   库名 = { path = "../本地库" }
 [dependencies]
 "#;
 

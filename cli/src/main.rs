@@ -5,6 +5,8 @@ use std::env;
 use std::path::PathBuf;
 
 mod commands;
+mod lock;
+mod manifest;
 
 const HELP: &str = r#"CH+ 中文编程语言工具链
 
@@ -14,12 +16,21 @@ const HELP: &str = r#"CH+ 中文编程语言工具链
 命令:
     new <名称>       创建新 CH+ 项目
     init             在当前目录初始化 CH+ 项目
+    add <库名> <url> 添加依赖并拉取 (--tag/--branch/--rev/--path)
     run [文件]       编译并运行 .ch 文件 (默认入口:主函数.ch)
+    check [文件]     语法检查不执行 (CI 用)
     build [文件]     编译为 16进制 .chex 产物
     fmt [文件]       格式化代码 (默认:整个项目)
     fmt --check      仅检查格式,不修改 (CI 用)
     test             运行 tests/ 下所有 .ch 测试
+    lint [文件]      静态分析:符号摘要 + 重复定义/导入检测
+    clean [--all]    清理 dist/ 和 .chex (--all 含 chplus_modules/)
+    version          显示工具链版本
     help             显示本帮助
+
+选项:
+    -V, --version    等同 `chplus version`
+    -h, --help       等同 `chplus help`
 
 示例:
     chplus new 我的项目
@@ -47,12 +58,17 @@ fn main() -> Result<()> {
             print!("{}", HELP);
             Ok(())
         }
+        "-V" | "--version" | "version" => commands::version::version(rest),
         "new" => commands::new::create(rest),
         "init" => commands::new::init(rest),
+        "add" => commands::add::add(rest),
         "run" => commands::run::run(rest),
+        "check" => commands::check::check(rest),
         "build" => commands::build::build(rest),
         "fmt" => commands::fmt::fmt(rest),
         "test" => commands::test::test(rest),
+        "lint" => commands::lint::lint(rest),
+        "clean" => commands::clean::clean(rest),
         other => Err(anyhow!(
             "未知命令: {}\n用 `chplus help` 查看可用命令",
             other

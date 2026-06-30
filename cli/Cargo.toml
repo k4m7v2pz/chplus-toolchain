@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
+notify = "6"
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
 

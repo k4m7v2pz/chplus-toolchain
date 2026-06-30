@@ -1,11 +1,24 @@
 // chplus build [文件]
 // 编译为 .chex 二进制产物,输出到 dist/
 use anyhow::{anyhow, Result};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 pub fn build(args: &[String]) -> Result<()> {
-    let entry = resolve_entry(args)?;
+    let manifest = crate::manifest::load_current().ok();
+    // 编译前同样校验依赖 (保证可复现构建)
+    if let Some(m) = &manifest {
+        let (ready, issues) = crate::commands::add::ensure_deps_ready(m);
+        if !ready {
+            let mut msg = String::from("依赖未就绪:\n");
+            for i in &issues {
+                msg.push_str(&format!("  - {}\n", i));
+            }
+            msg.push_str("修复后重试");
+            return Err(anyhow!("{}", msg));
+        }
+    }
+    let entry = crate::manifest::resolve_entry(manifest.as_ref(), args)?;
     let core = crate::core_path()?;
 
     std::fs::create_dir_all("dist")?;
@@ -34,27 +47,4 @@ pub fn build(args: &[String]) -> Result<()> {
     println!("✓ 已编译: {} → {}", entry.display(), out_path.display());
     println!("  运行: chplus run {}", out_path.display());
     Ok(())
-}
-
-fn resolve_entry(args: &[String]) -> Result<PathBuf> {
-    if let Some(p) = args.first() {
-        if !p.starts_with('-') {
-            return Ok(PathBuf::from(p));
-        }
-    }
-    if let Ok(toml_str) = std::fs::read_to_string("chplus.toml") {
-        if let Ok(doc) = toml::from_str::<toml::Value>(&toml_str) {
-            if let Some(entry) = doc
-                .get("package")
-                .and_then(|p| p.get("entry"))
-                .and_then(|v| v.as_str())
-            {
-                return Ok(PathBuf::from(entry));
-            }
-        }
-    }
-    if Path::new("主函数.ch").exists() {
-        return Ok(PathBuf::from("主函数.ch"));
-    }
-    Err(anyhow!("未找到要编译的 .ch 文件"))
 }
